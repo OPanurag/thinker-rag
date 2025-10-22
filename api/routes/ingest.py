@@ -21,13 +21,38 @@ q = Queue(connection=redis_conn)
 class IngestRequest(BaseModel):
     url: HttpUrl
 
+class TextIngestRequest(BaseModel):
+    content: str
+
+@router.post("/ingest-text", status_code=202)
+async def ingest_text(req: TextIngestRequest, db: Session = Depends(get_db)):
+    try:
+        # Generate job ID
+        job_id = str(uuid.uuid4())
+        
+        # Queue the job with text content
+        payload = {
+            "job_id": job_id,
+            "content": req.content,
+            "is_text": True
+        }
+        q.enqueue("worker.jobs.ingest_job", payload, job_id=job_id)
+        
+        return {
+            "job_id": job_id,
+            "status": "queued",
+            "content_length": len(req.content)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
 @router.post("/ingest-url", status_code=202)
 async def ingest_url(req: IngestRequest, db: Session = Depends(get_db)):
     try:
         # Validate URL first
         metadata = await validate_url(str(req.url))
         
-        # Check if URL was already processed
+            # Check if URL was already processed
         existing = db.query(URLIngestion).filter(
             URLIngestion.url == str(req.url),
             URLIngestion.status == IngestStatus.COMPLETED

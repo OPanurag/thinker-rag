@@ -1,0 +1,21 @@
+Retrieval-Augmented Generation (RAG) is an AI framework that combines information retrieval with text generation to create more accurate and contextually relevant responses. Instead of relying solely on the knowledge contained in a language model's parameters, RAG retrieves relevant information from an external knowledge base before generating a response.
+
+Key Components of RAG:
+1. Document Ingestion: The process of breaking down documents into chunks and creating vector embeddings for efficient retrieval.
+2. Vector Database: Stores document chunks and their embeddings, enabling semantic search functionality.
+3. Retrieval System: Finds the most relevant document chunks based on a query's embedding.
+4. Language Model: Generates human-like responses using both the retrieved context and its own knowledge.
+
+Benefits of RAG:
+- Improved accuracy and factuality in responses
+- Ability to work with up-to-date information
+- Reduced hallucination compared to pure LLM responses
+- Transparent source attribution
+- Lower costs compared to fine-tuning
+
+Common Use Cases:
+- Question answering systems
+- Customer support chatbots
+- Documentation search
+- Knowledge base navigation
+- Research assistance

@@ -25,25 +25,32 @@ from storage.database import get_db
 from storage.models import URLIngestion, IngestStatus
 
 def ingest_job(payload):
-    job_id, url = payload["job_id"], payload["url"]
+    job_id = payload["job_id"]
     
-    # Update status to processing
-    with get_db() as db:
-        ingestion = db.query(URLIngestion).filter(URLIngestion.job_id == job_id).first()
-        if ingestion:
-            ingestion.status = IngestStatus.PROCESSING
-            db.commit()
-    
-    print(f"[Worker] Ingesting {url}")
-    text = fetch_text(url)
-    if not text:
-        # Update status to failed
+    if payload.get("is_text", False):
+        text = payload["content"]
+        source = f"text_input_{job_id}"
+    else:
+        url = payload["url"]
+        # Update status to processing
         with get_db() as db:
+            ingestion = db.query(URLIngestion).filter(URLIngestion.job_id == job_id).first()
             if ingestion:
-                ingestion.status = IngestStatus.FAILED
-                ingestion.error_message = "No text could be extracted from the URL"
+                ingestion.status = IngestStatus.PROCESSING
                 db.commit()
-        return {"status": "failed", "error": "no_text"}
+        
+        print(f"[Worker] Ingesting {url}")
+        text = fetch_text(url)
+        source = url
+        
+        if not text:
+            # Update status to failed
+            with get_db() as db:
+                if ingestion:
+                    ingestion.status = IngestStatus.FAILED
+                    ingestion.error_message = "No text could be extracted from the URL"
+                    db.commit()
+            return {"status": "failed", "error": "no_text"}
     
     chunks = chunk_text(text)
     embeddings = embed_batch(chunks)
