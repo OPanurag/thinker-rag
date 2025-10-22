@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: aira
+      POSTGRES_PASSWORD: aira_pass
+      POSTGRES_DB: aira_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  qdrant:
+    image: qdrant/qdrant:v1.9.1
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdata:/qdrant/storage
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      - redis
+      - postgres
+      - qdrant
+
+  worker:
+    build: .
+    command: python worker/worker.py
+    env_file: .env
+    depends_on:
+      - redis
+      - postgres
+      - qdrant
+
+volumes:
+  pgdata:
+  qdata:
