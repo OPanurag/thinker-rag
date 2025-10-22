@@ -6,23 +6,19 @@ ENV PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and UV
 RUN apt-get update && apt-get install -y \
     build-essential \
     python3-dev \
-    python3-pip \
     libpq-dev \
     gcc \
-    curl \
     postgresql-client \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install UV package manager
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install uv
 
 # Install Python dependencies using UV
 COPY requirements.txt /app/
-RUN /root/.cargo/bin/uv pip install --no-cache -r requirements.txt
+RUN uv pip install --no-cache -r requirements.txt
 
 # Copy application code
 COPY . /app
